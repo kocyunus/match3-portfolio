@@ -20,3 +20,8 @@ MemoryCaptures/
 .DS_Store
 .idea/
 .vscode/
+
+# Cursor AI dosyaları
+.cursorignore
+.cursorrules
+.aider*
