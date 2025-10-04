@@ -270,8 +270,8 @@ Unity Game Developer
 
 ### **İletişim**
 - GitHub: [github.com/kocyunus](https://github.com/kocyunus)
-- LinkedIn: [Profiliniz]
-- Email: [Email adresiniz]
+- LinkedIn: [[Profiliniz]](https://www.linkedin.com/in/yunus-ko%C3%A7/)
+- Email: kocyns1@gmail.com
 
 ---
 
