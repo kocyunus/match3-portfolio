@@ -10,8 +10,6 @@
 /// - Test yazarken mock servis oluşturmayı kolaylaştırır
 /// - Tüm servislerin aynı davranışı garanti eder
 /// 
-/// SEKTÖR STANDARDI:
-/// - Büyük oyun stüdyolarında (Supercell, King) kullanılan pattern
 /// </summary>
 public interface IService
 {

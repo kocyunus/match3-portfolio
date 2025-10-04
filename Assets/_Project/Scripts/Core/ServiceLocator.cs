@@ -20,10 +20,6 @@ using System.Collections.Generic;
 /// ✅ Test edilebilir (mock servisler eklenebilir)
 /// ✅ Null reference hatalarını önler
 /// 
-/// SEKTÖR STANDARDI:
-/// Mobile game stüdyolarında en yaygın kullanılan pattern.
-/// Dependency Injection'a göre daha performanslı ve Unity'de daha pratik.
-/// 
 /// DİKKAT:
 /// Bu "static" bir sınıf çünkü oyunun her yerinden erişilebilir olmalı.
 /// Ancak, test sırasında Reset() ile temizlenebilir.

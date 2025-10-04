@@ -277,13 +277,6 @@ public class Bootstrapper : MonoBehaviour
  * 4. Oyunun herhangi bir yerinden kullan:
  *    ServiceLocator.Get<IMyService>().DoSomething();
  * 
- * ===== SEKTÖR BİLGİSİ =====
- * 
- * Bu pattern şu şirketlerde kullanılır:
- * - King (Candy Crush)
- * - Supercell (Clash of Clans)
- * - Playrix (Homescapes)
- * 
  * Neden bu kadar yaygın?
  * ✅ Hızlı development
  * ✅ Kolay test edilebilir
