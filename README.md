@@ -270,7 +270,7 @@ Unity Game Developer
 
 ### **İletişim**
 - GitHub: [github.com/kocyunus](https://github.com/kocyunus)
-- LinkedIn: [[Profiliniz]](https://www.linkedin.com/in/yunus-ko%C3%A7/)
+- LinkedIn: [[Linkedin]](https://www.linkedin.com/in/yunus-ko%C3%A7/)
 - Email: kocyns1@gmail.com
 
 ---
@@ -299,16 +299,6 @@ Assembly Definition kullandım çünkü:
 - Test izolasyonu
 - Dependency management
 - Production build'de test kodları yok
-
----
-
-## 🏆 Hedef Şirket Profili
-
-Bu proje özellikle şu tür şirketler için tasarlandı:
-- ✅ Mid-large scale game studios
-- ✅ Clean code ve best practice odaklı ekipler
-- ✅ Test-driven development uygulayan şirketler
-- ✅ Scrum/Agile metodolojisi kullanan teams
 
 ---
 
