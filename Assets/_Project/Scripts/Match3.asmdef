@@ -1,7 +1,9 @@
 {
-    "name": "Yunus.Match3.Game",
+    "name": "Match3",
     "rootNamespace": "Yunus.Match3",
-    "references": [],
+    "references": [
+        "DOTween.Modules"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

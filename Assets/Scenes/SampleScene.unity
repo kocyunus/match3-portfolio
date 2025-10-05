@@ -122,6 +122,90 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &216366585
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 216366587}
+  - component: {fileID: 216366586}
+  - component: {fileID: 216366589}
+  - component: {fileID: 216366588}
+  m_Layer: 0
+  m_Name: Board
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &216366586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216366585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 312cc8866ee3d01408bed3db6f9c226e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  width: 8
+  height: 8
+  tilePrefab: {fileID: 8651163101127107973, guid: cadcc20f6a5a5644da62d50d53b187fe, type: 3}
+  tileSprites:
+  - {fileID: 21300000, guid: 0250c5b7f7279b842ab90d1cb6422ee4, type: 3}
+  - {fileID: 21300000, guid: 3f39d267d5764884599e7683444140a1, type: 3}
+  - {fileID: 21300000, guid: 1ca30cddb32ea9a4b95cb5a80fb4bf7c, type: 3}
+  - {fileID: 21300000, guid: f3d376fd2cae9784e8e80cccbb1eced6, type: 3}
+  - {fileID: 21300000, guid: 0c3d3311480f5574fbf7280119903ba6, type: 3}
+  - {fileID: 21300000, guid: 3548c527470f5f94e8774a6575f0c008, type: 3}
+  backgroundTilePrefab: {fileID: 6119570104585639661, guid: 0489f92956e73ab45b2837377bfcec1b, type: 3}
+  boardOffset: {x: 0, y: 0}
+--- !u!4 &216366587
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216366585}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &216366588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216366585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bc13c6d1dca65a24baaedb8f416609d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &216366589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216366585}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbdfeb5c420866b41b1cd0cf8f7def59, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardView: {fileID: 216366586}
+  inputHandler: {fileID: 216366588}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -133,6 +217,7 @@ GameObject:
   - component: {fileID: 519420032}
   - component: {fileID: 519420031}
   - component: {fileID: 519420029}
+  - component: {fileID: 519420033}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -214,6 +299,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &519420033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519420028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 725ab1e2084be484f8c7ac717854eb52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  boardWidth: 8
+  boardHeight: 8
+  padding: 1
+  useSafeArea: 1
+  showDebugInfo: 1
 --- !u!1 &735853957
 GameObject:
   m_ObjectHideFlags: 0
@@ -309,3 +411,4 @@ SceneRoots:
   - {fileID: 519420032}
   - {fileID: 735853959}
   - {fileID: 1672344864}
+  - {fileID: 216366587}
