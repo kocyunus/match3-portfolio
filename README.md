@@ -408,16 +408,6 @@ Assembly Definition kullandım çünkü:
 
 ---
 
-## 🏆 Hedef Şirket Profili
-
-Bu proje özellikle şu tür şirketler için tasarlandı:
-- ✅ Mid-large scale game studios
-- ✅ Clean code ve best practice odaklı ekipler
-- ✅ Test-driven development uygulayan şirketler
-- ✅ Scrum/Agile metodolojisi kullanan teams
-
----
-
 ## 💎 Teknik Highlights
 
 ### **Architecture & Design**
