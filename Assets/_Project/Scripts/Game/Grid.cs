@@ -180,6 +180,95 @@ public class Grid
 
     #endregion
 
+    #region Gravity System
+
+    /// <summary>
+    /// Gravity uygula - boş hücrelere tile'lar düşsün
+    /// Column-based algorithm (mobile-optimized)
+    /// </summary>
+    /// <returns>Hareket eden tile'ların listesi (animation için)</returns>
+    public List<(Tile tile, int oldY, int newY)> ApplyGravity()
+    {
+        List<(Tile, int, int)> moves = new List<(Tile, int, int)>();
+        
+        UnityEngine.Debug.Log($"[ApplyGravity] Starting... Grid: {Width}x{Height}");
+        
+        // Her column'ı ayrı işle
+        for (int x = 0; x < Width; x++)
+        {
+            ApplyGravityToColumn(x, moves);
+        }
+        
+        UnityEngine.Debug.Log($"[ApplyGravity] Complete! Total moves: {moves.Count}");
+        
+        return moves;
+    }
+
+    /// <summary>
+    /// Tek column'a gravity uygula (internal method)
+    /// ALGORITHM: Top-to-Bottom Scan (Y büyük=ÜST, Y küçük=ALT)
+    /// </summary>
+    private void ApplyGravityToColumn(int x, List<(Tile, int, int)> moves)
+    {
+        UnityEngine.Debug.Log($"[Gravity-X={x}] ═══ START COLUMN ═══");
+        
+        // YUKARIDAN AŞAĞIYA TAR! (Y=Height-1 üstten Y=0 alta)
+        for (int y = Height - 1; y >= 0; y--)
+        {
+            // Bu pozisyon boşsa atla
+            if (tiles[x, y] == null)
+            {
+                UnityEngine.Debug.Log($"[Gravity-X={x}] Y={y} → Empty (skip)");
+                continue;
+            }
+            
+            Tile currentTile = tiles[x, y];
+            UnityEngine.Debug.Log($"[Gravity-X={x}] Y={y} → Checking tile: {currentTile.Type}");
+            
+            // AŞAĞIDA KAÇ TANE BOŞ VAR? BUL! (Y-1, Y-2, Y-3...)
+            int fallDistance = 0;
+            for (int checkY = y - 1; checkY >= 0; checkY--)
+            {
+                if (tiles[x, checkY] == null)
+                {
+                    fallDistance++;
+                    UnityEngine.Debug.Log($"[Gravity-X={x}]   ↓ Y={checkY} empty → fallDistance={fallDistance}");
+                }
+                else
+                {
+                    UnityEngine.Debug.Log($"[Gravity-X={x}]   ✋ Y={checkY} blocked by {tiles[x, checkY].Type}");
+                    break;  // Dolu tile bulduk, dur!
+                }
+            }
+            
+            // DÜŞÜRECEK YER VARSA DÜŞ!
+            if (fallDistance > 0)
+            {
+                int newY = y - fallDistance;  // ← Y AZALIR! (Alta düşme)
+                
+                UnityEngine.Debug.Log($"[Gravity-X={x}] ✅ FALLING: {currentTile.Type} ({x},{y}) → ({x},{newY})");
+                
+                // Eski yerden çıkar
+                tiles[x, y] = null;
+                
+                // Yeni yere yerleştir
+                tiles[x, newY] = currentTile;
+                currentTile.SetPosition(x, newY);
+                
+                // Move kaydı ekle (animation için)
+                moves.Add((currentTile, y, newY));
+            }
+            else
+            {
+                UnityEngine.Debug.Log($"[Gravity-X={x}] ⏸️ NO FALL: {currentTile.Type} stays at Y={y}");
+            }
+        }
+        
+        UnityEngine.Debug.Log($"[Gravity-X={x}] ═══ END COLUMN ═══");
+    }
+
+    #endregion
+
     #region Temizleme
 
     public void Clear()

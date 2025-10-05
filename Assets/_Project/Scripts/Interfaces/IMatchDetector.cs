@@ -17,6 +17,11 @@ namespace Yunus.Match3
         /// Match'e giren tüm tile'ları bul
         /// </summary>
         List<Tile> FindMatches(Tile tile, Grid grid);
+        
+        /// <summary>
+        /// TÜM board'da match'leri bul (CASCADE için!)
+        /// </summary>
+        List<Tile> FindAllMatches(Grid grid);
     }
 }
 

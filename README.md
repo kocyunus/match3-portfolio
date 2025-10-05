@@ -272,18 +272,18 @@ Assets/
 - [ ] Tile destruction & animations
 - [ ] Gravity System (tiles falling)
 - [ ] Board refill system
-- [ ] Cascade detection (chain reactions)
+- [x] Cascade detection (chain reactions)
 
 ---
 
 ## 📅 Gelecek Adımlar (Roadmap)
 
-### ⏳ **Sprint 6: Core Mechanics Completion**
-- [ ] Tile destruction & match animations (DOTween)
-- [ ] Gravity System (tiles falling down)
-- [ ] Board refill system (spawn new tiles)
-- [ ] Cascade detection (chain reactions)
-- [ ] Invalid move feedback (shake animation)
+### ✅ **Sprint 6: Core Mechanics Completion**
+- [x] Tile destruction & match animations (DOTween)
+- [x] Gravity System (tiles falling down)
+- [x] Board refill system (spawn new tiles)
+- [x] Cascade detection (chain reactions)
+- [x] Invalid move feedback (shake animation)
 
 ### ⏳ **Sprint 7: Performance & Optimization**
 - [ ] TileFactory (Factory pattern)

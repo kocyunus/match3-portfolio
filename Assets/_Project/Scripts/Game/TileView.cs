@@ -40,6 +40,7 @@ namespace Yunus.Match3
         {
             if (tile == null) return;
             // TEK KAYNAK: Tile.X, Tile.Y
+            // DİREK KULLAN! Y=0 (alt), Y=7 (üst)
             Vector3 localPos = new Vector3(tile.X, tile.Y, 0);
             transform.localPosition = localPos;
         }
@@ -82,6 +83,18 @@ namespace Yunus.Match3
             transform.DOScale(Vector3.zero, duration)
                 .SetEase(Ease.InBack)
                 .OnComplete(() => Destroy(gameObject));
+        }
+        
+        /// <summary>
+        /// Tile'ı yeni pozisyona düşür (gravity animation)
+        /// </summary>
+        /// <param name="newY">Yeni Y pozisyonu</param>
+        /// <param name="duration">Animation süresi</param>
+        public void AnimateFall(int newY, float duration = 0.3f)
+        {
+            // DİREK KULLAN! Y=0 (alt), Y=7 (üst)
+            Vector3 targetPos = new Vector3(transform.localPosition.x, newY, 0);
+            transform.DOLocalMove(targetPos, duration).SetEase(Ease.OutBounce);
         }
     }
 }

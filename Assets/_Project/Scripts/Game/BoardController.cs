@@ -174,7 +174,34 @@ namespace Yunus.Match3
             SwapCommand swapCommand = new SwapCommand(view1, view2, grid);
             swapCommand.Execute();
             
+            // KRİTİK: Swap sonrası dictionary güncelle!
+            // Çünkü Tile.GetHashCode() X,Y'ye bağlı, değişince hash değişir!
+            UpdateTileViewsDictionary();
+            
             StartCoroutine(CheckMatchAfterSwap(swapCommand, view1, view2));
+        }
+        
+        /// <summary>
+        /// Dictionary'i yeniden oluştur (Tile pozisyonları değiştiğinde gerekli)
+        /// </summary>
+        private void UpdateTileViewsDictionary()
+        {
+            // Mevcut TileView'ları sakla
+            var allViews = new System.Collections.Generic.List<TileView>(tileViews.Values);
+            
+            // Dictionary'i temizle
+            tileViews.Clear();
+            
+            // Yeniden ekle (güncel Tile referansları ile)
+            foreach (var view in allViews)
+            {
+                if (view != null && view.Tile != null)
+                {
+                    tileViews[view.Tile] = view;
+                }
+            }
+            
+            Debug.Log($"[UpdateDict] Dictionary updated: {tileViews.Count} tiles");
         }
         
         /// <summary>
@@ -196,12 +223,19 @@ namespace Yunus.Match3
                 List<Tile> matches1 = matchDetector.FindMatches(tile1.Tile, grid);
                 List<Tile> matches2 = matchDetector.FindMatches(tile2.Tile, grid);
                 
+                // DEBUG: Match sayılarını logla
+                Debug.Log($"[DEBUG] Tile1 ({tile1.X},{tile1.Y}) matches: {matches1.Count}");
+                Debug.Log($"[DEBUG] Tile2 ({tile2.X},{tile2.Y}) matches: {matches2.Count}");
+                
                 // İki listeyi birleştir (duplicate önle)
                 HashSet<Tile> allMatches = new HashSet<Tile>(matches1);
                 foreach (var tile in matches2)
                 {
                     allMatches.Add(tile);
                 }
+                
+                // DEBUG: Toplam unique tile sayısı
+                Debug.Log($"[DEBUG] Total unique matches: {allMatches.Count}");
                 
                 // Destroy et
                 yield return StartCoroutine(DestroyMatchedTiles(new List<Tile>(allMatches)));
@@ -212,6 +246,9 @@ namespace Yunus.Match3
             {
                 Debug.Log("No match - reverting ❌");
                 command.Undo();
+                
+                // KRİTİK: Undo sonrası da dictionary güncelle!
+                UpdateTileViewsDictionary();
                 
                 yield return new WaitForSeconds(0.7f);
                 isProcessingSwap = false;
@@ -225,11 +262,23 @@ namespace Yunus.Match3
         {
             Debug.Log($"Destroying {matchedTiles.Count} tiles...");
             
+            // GEÇİCİ LİSTE: Yok olan tile'ların pozisyonları (X,Y)
+            List<(int x, int y)> destroyedPositions = new List<(int x, int y)>();
+            
+            int destroyedCount = 0;
+            
             foreach (var tile in matchedTiles)
             {
+                Debug.Log($"[Destroy] Checking tile at ({tile.X},{tile.Y}), Type: {tile.Type}");
+                
                 if (tileViews.ContainsKey(tile))
                 {
                     TileView view = tileViews[tile];
+                    
+                    Debug.Log($"[Destroy] ✅ DESTROYING tile at ({tile.X},{tile.Y})");
+                    
+                    // GEÇİCİ LİSTEYE EKLE!
+                    destroyedPositions.Add((tile.X, tile.Y));
                     
                     // Animasyon başlat (DOTween)
                     view.DestroyWithAnimation(0.25f);
@@ -239,13 +288,221 @@ namespace Yunus.Match3
                     
                     // Grid'den çıkar
                     grid.RemoveTile(tile.X, tile.Y);
+                    
+                    destroyedCount++;
+                }
+                else
+                {
+                    Debug.LogError($"[Destroy] ❌ TILE NOT FOUND IN DICTIONARY! ({tile.X},{tile.Y})");
                 }
             }
             
             // Tüm animasyonlar bitsin
             yield return new WaitForSeconds(0.3f);
             
-            Debug.Log("Tiles destroyed! ✅");
+            Debug.Log($"Tiles destroyed! ✅ ({destroyedCount}/{matchedTiles.Count})");
+            
+            // GRAVITY UYGULA (sadece destroy edilen pozisyonlara!)
+            yield return StartCoroutine(ProcessGravityOptimized(destroyedPositions));
+        }
+        
+        /// <summary>
+        /// OPTİMİZE EDİLMİŞ GRAVITY: Column Compacting Algorithm
+        /// Sadece etkilenen column'ları işle - garantili çalışır!
+        /// </summary>
+        private System.Collections.IEnumerator ProcessGravityOptimized(List<(int x, int y)> destroyedPositions)
+        {
+            Debug.Log($"[Gravity-Compacting] Processing {destroyedPositions.Count} destroyed positions...");
+            
+            // ADIM 1: Etkilenen column'ları bul (HashSet = unique X'ler)
+            HashSet<int> affectedColumns = new HashSet<int>();
+            foreach (var pos in destroyedPositions)
+            {
+                affectedColumns.Add(pos.x);
+            }
+            
+            Debug.Log($"[Gravity-Compacting] Affected columns: {affectedColumns.Count}");
+            
+            // ADIM 2: Her column için gravity uygula (COLUMN COMPACTING)
+            foreach (int x in affectedColumns)
+            {
+                Debug.Log($"[Gravity-Compacting] ═══ Processing Column X={x} ═══");
+                
+                // Column'daki tüm DOLU tile'ları topla (alttan üste)
+                List<Tile> solidTiles = new List<Tile>();
+                
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    Tile tile = grid.GetTile(x, y);
+                    if (tile != null)
+                    {
+                        solidTiles.Add(tile);
+                        Debug.Log($"[Gravity-Compacting]   Found solid tile at ({x},{y}), Type: {tile.Type}");
+                    }
+                }
+                
+                Debug.Log($"[Gravity-Compacting] Column X={x} has {solidTiles.Count} solid tiles");
+                
+                // Column'ı temizle
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    grid.SetTile(x, y, null);
+                }
+                
+                // Dolu tile'ları ALTTAN BAŞLAYARAK yerleştir
+                for (int i = 0; i < solidTiles.Count; i++)
+                {
+                    Tile tile = solidTiles[i];
+                    int oldY = tile.Y;
+                    int newY = i;  // Y=0'dan başla (alt), Y=1, Y=2...
+                    
+                    // KRİTİK: TileView'ı ÖNCE BUL (tile.SetPosition öncesi!)
+                    TileView view = null;
+                    if (tileViews.ContainsKey(tile))
+                    {
+                        view = tileViews[tile];
+                    }
+                    
+                    // Grid'e yerleştir
+                    grid.SetTile(x, newY, tile);
+                    
+                    // Tile pozisyonunu güncelle (HASH DEĞİŞİR!)
+                    tile.SetPosition(x, newY);
+                    
+                    // Animasyon (sadece hareket ettiyse)
+                    if (oldY != newY && view != null)
+                    {
+                        view.AnimateFall(newY, 0.3f);
+                        Debug.Log($"[Gravity-Compacting]   ✅ Falling: {tile.Type} Y={oldY}→{newY}");
+                    }
+                }
+                
+                Debug.Log($"[Gravity-Compacting] ═══ Column X={x} Complete ═══");
+            }
+            
+            // Animasyonlar bitsin
+            yield return new WaitForSeconds(0.35f);
+            
+            // KRİTİK: Dictionary güncelle (X,Y değişti, hash değişti!)
+            UpdateTileViewsDictionary();
+            Debug.Log("[Gravity-Compacting] Complete! Dictionary updated ✅");
+            
+            // CASCADE KONTROLÜ: Gravity sonrası yeni match var mı?
+            yield return StartCoroutine(CheckForCascade());
+        }
+        
+        /// <summary>
+        /// CASCADE SYSTEM: Gravity sonrası yeni match var mı kontrol et
+        /// Varsa tekrar patlat (LOOP!), yoksa Refill yap
+        /// </summary>
+        private System.Collections.IEnumerator CheckForCascade()
+        {
+            Debug.Log("[CASCADE] Checking for new matches after gravity...");
+            
+            // TÜM BOARD'U TARA! (Yeni matchler olabilir)
+            List<Tile> allMatches = matchDetector.FindAllMatches(grid);
+            
+            if (allMatches.Count > 0)
+            {
+                Debug.Log($"[CASCADE] ✅ NEW MATCHES FOUND! {allMatches.Count} tiles");
+                Debug.Log("[CASCADE] 🔄 CONTINUING CASCADE LOOP...");
+                
+                // YENİ MATCH VAR! Tekrar patlat → Gravity → Kontrol (RECURSIVE!)
+                yield return StartCoroutine(DestroyMatchedTiles(allMatches));
+                
+                // DestroyMatchedTiles zaten Gravity'yi çağırıyor,
+                // Gravity de CheckForCascade'i çağırıyor → LOOP! 🔄
+            }
+            else
+            {
+                Debug.Log("[CASCADE] ❌ No new matches found");
+                Debug.Log("[CASCADE] → Proceeding to REFILL");
+                
+                // MATCH YOK! Refill yap ve bitir
+                yield return StartCoroutine(ProcessRefill());
+            }
+        }
+        
+        /// <summary>
+        /// ESKİ GRAVITY (FULL SCAN) - Şimdilik sakla
+        /// </summary>
+        private System.Collections.IEnumerator ProcessGravity()
+        {
+            Debug.Log("Applying gravity...");
+            
+            // Grid'de gravity hesapla
+            var moves = grid.ApplyGravity();
+            
+            if (moves.Count > 0)
+            {
+                Debug.Log($"Gravity: {moves.Count} tiles falling");
+                
+                // Animasyonları başlat
+                foreach (var move in moves)
+                {
+                    if (tileViews.ContainsKey(move.tile))
+                    {
+                        TileView view = tileViews[move.tile];
+                        view.AnimateFall(move.newY, 0.3f);
+                    }
+                }
+                
+                // Animasyonlar bitsin
+                yield return new WaitForSeconds(0.35f);
+                
+                Debug.Log("Gravity complete! ✅");
+                
+                // KRİTİK: Gravity sonrası dictionary güncelle!
+                // Çünkü tile'ların X,Y değişti, hash code değişti!
+                UpdateTileViewsDictionary();
+                Debug.Log("[STEP 2/3] Gravity Complete → Dictionary Updated ✅");
+            }
+            
+            // BOARD'U YENİDEN DOLDUR! (ŞİMDİLİK KAPALI - GRAVITY TESTİ)
+            // yield return StartCoroutine(ProcessRefill());
+            
+            Debug.Log("═══════════════════════════════════════");
+            Debug.Log("GRAVITY TEST COMPLETE! (Refill disabled)");
+        }
+        
+        /// <summary>
+        /// Board'u yeniden doldur - yeni tile'lar spawn et
+        /// </summary>
+        private System.Collections.IEnumerator ProcessRefill()
+        {
+            Debug.Log("Refilling board...");
+            
+            // Yeni tile'lar spawn et
+            List<TileView> newTiles = boardView.RefillBoard();
+            
+            if (newTiles.Count == 0)
+            {
+                Debug.Log("No refill needed");
+                yield break;
+            }
+            
+            Debug.Log($"Refill: {newTiles.Count} new tiles");
+            
+            // Yeni tile'ları düşür (animation)
+            foreach (var tileView in newTiles)
+            {
+                tileView.AnimateFall(tileView.Y, 0.4f);
+            }
+            
+            // Animasyonlar bitsin
+            yield return new WaitForSeconds(0.45f);
+            
+            Debug.Log("Refill complete! ✅");
+            
+            // KRİTİK: Refill sonrası dictionary güncelle!
+            // Yeni tile'lar eklendi, hash'ler güncel olmalı
+            UpdateTileViewsDictionary();
+            Debug.Log("[Refill] Dictionary Updated ✅");
+            
+            Debug.Log("═══════════════════════════════════════");
+            Debug.Log("🎮 MATCH-3 GAME LOOP COMPLETE! 🎮");
+            Debug.Log("Player can move again.");
+            Debug.Log("═══════════════════════════════════════");
         }
     }
 }

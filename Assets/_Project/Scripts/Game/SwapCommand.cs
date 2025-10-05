@@ -24,9 +24,9 @@ namespace Yunus.Match3
             this.tile2 = tile2;
             this.grid = grid;
             
-            // Orijinal pozisyonları Tile DATA'dan al (tek kaynak!)
-            tile1OriginalPos = new Vector3(tile1.Tile.X, tile1.Tile.Y, 0);
-            tile2OriginalPos = new Vector3(tile2.Tile.X, tile2.Tile.Y, 0);
+            // Orijinal pozisyonları GÖRSEL olarak kaydet (current transform position)
+            tile1OriginalPos = tile1.transform.localPosition;
+            tile2OriginalPos = tile2.transform.localPosition;
         }
         
         /// <summary>
@@ -35,16 +35,11 @@ namespace Yunus.Match3
         public void Execute()
         {
             // 1. ÖNCE Grid swap yap (Tile.X ve Tile.Y değişecek!)
-            int tile1OrigX = tile1.Tile.X;
-            int tile1OrigY = tile1.Tile.Y;
-            int tile2OrigX = tile2.Tile.X;
-            int tile2OrigY = tile2.Tile.Y;
-            
             grid.SwapTiles(tile1.Tile, tile2.Tile);
             
-            // 2. Hedef pozisyonlar = swap ÖNCESI X,Y koordinatları (Tile data'dan!)
-            Vector3 tile1Target = new Vector3(tile2OrigX, tile2OrigY, 0);
-            Vector3 tile2Target = new Vector3(tile1OrigX, tile1OrigY, 0);
+            // 2. Görsel pozisyonları swap et (tile2'nin görsel pozisyonuna git)
+            Vector3 tile1Target = tile2OriginalPos;
+            Vector3 tile2Target = tile1OriginalPos;
             
             tile1.MoveTo(tile1Target, 0.3f);
             tile2.MoveTo(tile2Target, 0.3f);

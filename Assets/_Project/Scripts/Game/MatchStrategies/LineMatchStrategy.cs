@@ -25,24 +25,36 @@ namespace Yunus.Match3
         
         public List<Tile> FindMatches(Tile tile, Grid grid)
         {
-            List<Tile> matches = new List<Tile>();
-            if (tile == null) return matches;
+            if (tile == null) return new List<Tile>();
+            
+            // DAHA SAĞLAM: HashSet kullan (duplicate önleme garantisi!)
+            HashSet<Tile> matchSet = new HashSet<Tile>();
             
             // Yatay match'leri bul
             List<Tile> horizontalMatches = FindMatchesInLine(tile, grid, 1, 0, -1, 0);
             if (horizontalMatches.Count >= 3)
             {
-                matches.AddRange(horizontalMatches);
+                UnityEngine.Debug.Log($"[LineMatch] Horizontal match at ({tile.X},{tile.Y}): {horizontalMatches.Count} tiles");
+                foreach (var t in horizontalMatches)
+                {
+                    matchSet.Add(t); // HashSet otomatik duplicate önler
+                }
             }
             
             // Dikey match'leri bul
             List<Tile> verticalMatches = FindMatchesInLine(tile, grid, 0, 1, 0, -1);
             if (verticalMatches.Count >= 3)
             {
-                matches.AddRange(verticalMatches);
+                UnityEngine.Debug.Log($"[LineMatch] Vertical match at ({tile.X},{tile.Y}): {verticalMatches.Count} tiles");
+                foreach (var t in verticalMatches)
+                {
+                    matchSet.Add(t); // HashSet otomatik duplicate önler
+                }
             }
             
-            return matches;
+            UnityEngine.Debug.Log($"[LineMatch] Total unique matches: {matchSet.Count}");
+            
+            return new List<Tile>(matchSet);
         }
         
         /// <summary>
@@ -77,16 +89,23 @@ namespace Yunus.Match3
             List<Tile> matches = new List<Tile> { tile };  // Kendisi
             
             // Yön 1 (örn: sağ)
+            int beforeCount = matches.Count;
             AddMatchesInDirection(matches, tile, grid, dir1X, dir1Y);
+            UnityEngine.Debug.Log($"[FindMatchesInLine] Dir1({dir1X},{dir1Y}) added {matches.Count - beforeCount} tiles");
             
             // Yön 2 (örn: sol)
+            beforeCount = matches.Count;
             AddMatchesInDirection(matches, tile, grid, dir2X, dir2Y);
+            UnityEngine.Debug.Log($"[FindMatchesInLine] Dir2({dir2X},{dir2Y}) added {matches.Count - beforeCount} tiles");
+            
+            UnityEngine.Debug.Log($"[FindMatchesInLine] Total line matches: {matches.Count}");
             
             return matches;
         }
         
         /// <summary>
         /// Belirli yöndeki tüm eşleşmeleri listeye ekle
+        /// BEST PRACTICE: Contains kontrolü ile duplicate önleme!
         /// </summary>
         private void AddMatchesInDirection(List<Tile> matches, Tile tile, Grid grid, int dirX, int dirY)
         {
@@ -98,11 +117,30 @@ namespace Yunus.Match3
                 Tile neighbor = grid.GetTile(x, y);
                 if (neighbor != null && neighbor.CanMatchWith(tile))
                 {
-                    matches.Add(neighbor);
+                    UnityEngine.Debug.Log($"[AddMatches] Found match at ({x},{y}), Type: {neighbor.Type}");
+                    
+                    // BEST PRACTICE: Duplicate kontrolü!
+                    if (!matches.Contains(neighbor))
+                    {
+                        matches.Add(neighbor);
+                        UnityEngine.Debug.Log($"[AddMatches] Added to list (now {matches.Count} tiles)");
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning($"[AddMatches] DUPLICATE! Tile at ({x},{y}) already in list!");
+                    }
+                    
                     x += dirX;
                     y += dirY;
                 }
-                else break;
+                else 
+                {
+                    if (neighbor == null)
+                        UnityEngine.Debug.Log($"[AddMatches] Stopped at ({x},{y}): NULL tile");
+                    else
+                        UnityEngine.Debug.Log($"[AddMatches] Stopped at ({x},{y}): Different type ({neighbor.Type} vs {tile.Type})");
+                    break;
+                }
             }
         }
     }
