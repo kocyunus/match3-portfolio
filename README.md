@@ -63,13 +63,44 @@ public class Bootstrapper : MonoBehaviour
 - Oyun yaşam döngüsü yönetimi
 - DontDestroyOnLoad objeleri
 
-#### 4️⃣ **Factory Pattern**
+#### 4️⃣ **Command Pattern**
+```csharp
+// Tile swap işlemleri için Command Pattern (undo desteği)
+SwapCommand command = new SwapCommand(tile1, tile2, grid);
+command.Execute();  // Swap yap
+command.Undo();     // Geri al (match yoksa)
+```
+**Avantajları:**
+- Undo/Redo desteği
+- İşlem geçmişi tutma
+- Test edilebilir oyun logici
+
+#### 5️⃣ **Strategy Pattern**
+```csharp
+// Farklı match türleri için Strategy Pattern
+public interface IMatchStrategy
+{
+    bool HasMatch(Tile tile, Grid grid);
+    List<Tile> FindMatches(Tile tile, Grid grid);
+}
+
+// Yatay/Dikey eşleşme stratejisi
+public class LineMatchStrategy : IMatchStrategy { }
+
+// Gelecekte: L-shape, T-shape stratejileri eklenebilir
+```
+**Avantajları:**
+- Yeni match türleri kolay eklenebilir
+- Open/Closed Principle
+- A/B testing için ideal
+
+#### 6️⃣ **Factory Pattern** ⏳
 ```csharp
 // Tile oluşturma için factory pattern (yakında)
 TileFactory.CreateTile(TileType.Red, x, y);
 ```
 
-#### 5️⃣ **Object Pool Pattern**
+#### 7️⃣ **Object Pool Pattern** ⏳
 ```csharp
 // Bellek optimizasyonu için pooling (yakında)
 TilePool.Get() / TilePool.Return(tile);
@@ -83,27 +114,60 @@ TilePool.Get() / TilePool.Return(tile);
 Assets/
 ├── _Project/
 │   ├── Scripts/
-│   │   ├── Core/              # Temel altyapı
-│   │   │   ├── IService.cs           # Servis arayüzü
-│   │   │   ├── ServiceLocator.cs     # Servis yönetimi
-│   │   │   ├── Bootstrapper.cs       # Oyun başlatıcı
-│   │   │   └── GameEvents.cs         # Event sistemi
+│   │   ├── Match3.asmdef          # Ana assembly definition
 │   │   │
-│   │   ├── Game/              # Oyun mantığı
-│   │   │   ├── Tile.cs               # Tile veri modeli
-│   │   │   ├── Grid.cs               # Grid sistemi
-│   │   │   └── Game.asmdef           # Assembly definition
+│   │   ├── Core/                  # Temel altyapı
+│   │   │   ├── IService.cs             # Servis arayüzü
+│   │   │   ├── ServiceLocator.cs       # Servis yönetimi
+│   │   │   ├── Bootstrapper.cs         # Oyun başlatıcı
+│   │   │   ├── GameEvents.cs           # Event sistemi
+│   │   │   └── CameraFitter.cs         # Responsive kamera
 │   │   │
-│   │   └── Utilities/         # Yardımcı sınıflar
-│   │       └── GameConstants.cs      # Sabitler
+│   │   ├── Game/                  # Oyun mantığı
+│   │   │   ├── Tile.cs                 # Tile data model
+│   │   │   ├── Grid.cs                 # Grid sistemi
+│   │   │   ├── TileView.cs             # Tile görsel (MonoBehaviour)
+│   │   │   ├── BoardView.cs            # Board rendering
+│   │   │   ├── BoardController.cs      # Board logic
+│   │   │   ├── SwapCommand.cs          # Command Pattern
+│   │   │   │
+│   │   │   └── MatchStrategies/        # Strategy Pattern
+│   │   │       ├── MatchDetector.cs
+│   │   │       └── LineMatchStrategy.cs
+│   │   │
+│   │   ├── Interfaces/            # Abstraction layer
+│   │   │   ├── IInputHandler.cs
+│   │   │   ├── IMatchStrategy.cs
+│   │   │   └── IMatchDetector.cs
+│   │   │
+│   │   ├── Services/              # Game services
+│   │   │   └── MouseInputHandler.cs    # Input sistemi
+│   │   │
+│   │   └── Utilities/             # Yardımcı sınıflar
+│   │       └── GameConstants.cs        # Sabitler
 │   │
-│   └── Scenes/                # Oyun sahneleri
+│   ├── Art/                       # Görsel varlıklar
+│   │   ├── red.png
+│   │   ├── blue.png
+│   │   ├── green.png
+│   │   ├── yellow.png
+│   │   ├── purple.png
+│   │   └── white.png
+│   │
+│   ├── Prefabs/                   # Prefab'lar
+│   │   ├── Tile_Prefab.prefab
+│   │   └── BackgroundTile.prefab
+│   │
+│   └── Scenes/                    # Oyun sahneleri
 │       └── Test.unity
 │
-└── Tests/                     # Unit testler
-    ├── TileTests.cs          # Tile testleri (6 test)
-    ├── GridTests.cs          # Grid testleri (10 test)
-    └── Tests.asmdef          # Test assembly definition
+├── Plugins/                       # Third-party assets
+│   └── DOTween/                   # Animation library
+│
+└── Tests/                         # Unit testler
+    ├── Match3.Tests.asmdef        # Test assembly definition
+    ├── TileTests.cs               # Tile testleri (6 test)
+    └── GridTests.cs               # Grid testleri (10 test)
 ```
 
 ---
@@ -159,6 +223,9 @@ Assets/
 - **Unity Version**: 2022.3 LTS (önerilen)
 - **Scripting Backend**: IL2CPP (release build)
 - **API Compatibility**: .NET Standard 2.1
+- **Third-Party**: DOTween (animation library)
+- **Physics**: 2D Physics (BoxCollider2D, Raycast2D)
+- **Input**: Mouse + Swipe detection (Touch-ready)
 
 ---
 
@@ -178,39 +245,74 @@ Assets/
 - [x] Namespace organization (Yunus.Match3)
 
 ### ✅ **Sprint 3: Testing Infrastructure**
-- [x] Assembly Definition setup
+- [x] Assembly Definition setup (Match3.asmdef + Match3.Tests.asmdef)
 - [x] Unit Test framework configuration
 - [x] TileTests implementation (6 tests)
 - [x] GridTests implementation (10 tests)
 - [x] 100% test success rate
+- [x] Assembly reference sorunu çözüldü
+
+### ✅ **Sprint 4: Visual System**
+- [x] TileView (MonoBehaviour - Visual representation)
+- [x] BoardView (Board rendering)
+- [x] BoardController (MVC pattern - Logic/View ayrımı)
+- [x] CameraFitter (Responsive camera system)
+- [x] DOTween entegrasyonu (Smooth animations)
+- [x] 6 Tile sprite (red, blue, green, yellow, purple, white)
+- [x] Tile prefab + Background tile prefab
+- [x] Layer sistemi düzeltildi (Tile layer, BoxCollider2D)
+
+### ✅ **Sprint 5: Game Mechanics** (Kısmen Tamamlandı)
+- [x] Match Detection (Strategy Pattern)
+- [x] LineMatchStrategy (Horizontal/Vertical matches)
+- [x] MatchDetector (Extensible match system)
+- [x] Input System (MouseInputHandler - Swipe detection)
+- [x] Tile Swap (SwapCommand - Command Pattern, undo desteği)
+- [x] Interface'ler (IMatchStrategy, IMatchDetector, IInputHandler)
+- [ ] Tile destruction & animations
+- [ ] Gravity System (tiles falling)
+- [ ] Board refill system
+- [ ] Cascade detection (chain reactions)
 
 ---
 
 ## 📅 Gelecek Adımlar (Roadmap)
 
-### ⏳ **Sprint 4: Visual System**
-- [ ] TileView (MonoBehaviour - Visual representation)
-- [ ] BoardView (Board rendering)
+### ⏳ **Sprint 6: Core Mechanics Completion**
+- [ ] Tile destruction & match animations (DOTween)
+- [ ] Gravity System (tiles falling down)
+- [ ] Board refill system (spawn new tiles)
+- [ ] Cascade detection (chain reactions)
+- [ ] Invalid move feedback (shake animation)
+
+### ⏳ **Sprint 7: Performance & Optimization**
 - [ ] TileFactory (Factory pattern)
 - [ ] TilePool (Object Pool pattern)
+- [ ] Memory profiling & optimization
+- [ ] GC allocation optimization
+- [ ] Layer mask optimizations
 
-### ⏳ **Sprint 5: Game Mechanics**
-- [ ] Match Detection (Flood fill algorithm)
-- [ ] Input System (Touch & Mouse support)
-- [ ] Tile Swap Animation (DOTween)
-- [ ] Gravity System
-
-### ⏳ **Sprint 6: Scoring & Progression**
-- [ ] Score System
-- [ ] Combo detection
+### ⏳ **Sprint 8: Scoring & Progression**
+- [ ] Score System (ScoreService)
+- [ ] Combo detection & multipliers
 - [ ] Level System (ScriptableObject-based)
-- [ ] Save/Load System
+- [ ] Star rating system
+- [ ] Save/Load System (PlayerPrefs)
 
-### ⏳ **Sprint 7: Polish & Optimization**
+### ⏳ **Sprint 9: Polish & Juice**
 - [ ] Audio System (Pooled audio sources)
-- [ ] Particle effects
-- [ ] UI/UX polish
-- [ ] Performance profiling
+- [ ] Match particle effects (VFX)
+- [ ] UI/UX implementation (Main Menu, HUD, Pause)
+- [ ] Screen shake on combos
+- [ ] Tile spawn animations
+- [ ] Special tile effects (4-match, 5-match)
+
+### ⏳ **Sprint 10: Advanced Features** (Optional)
+- [ ] Power-ups system (Bomb, Rocket, Color Bomb)
+- [ ] Touch input support (mobile)
+- [ ] L-shape & T-shape match detection
+- [ ] Tutorial system
+- [ ] Achievement system
 
 ---
 
@@ -256,10 +358,14 @@ git clone https://github.com/kocyunus/match3-portfolio.git
 
 ## 📊 Proje İstatistikleri
 
-- **Toplam Kod Satırı**: ~2300 satır
-- **Test Coverage**: 16 unit test
+- **Toplam Kod Satırı**: ~3,500 satır
+- **C# Script Dosyaları**: 24 dosya
+- **Test Coverage**: 16 unit test (100% passed)
+- **Design Patterns**: 5 pattern uygulandı
+- **Assembly Definitions**: 2 asmdef (oyun + test)
 - **Commit Sayısı**: Düzenli ve anlamlı commit'ler
-- **Code Quality**: Clean Code prensiplerine uygun
+- **Code Quality**: Clean Code prensiplerine uygun (SOLID + XML docs)
+- **Third-Party**: DOTween (animation library)
 
 ---
 
@@ -270,8 +376,8 @@ Unity Game Developer
 
 ### **İletişim**
 - GitHub: [github.com/kocyunus](https://github.com/kocyunus)
-- LinkedIn: [Profiliniz]
-- Email: [Email adresiniz]
+- LinkedIn: [Yunus Koç](https://www.linkedin.com/in/yunus-ko%C3%A7/)
+- Email: kocyns1@gmail.com
 
 ---
 
@@ -309,6 +415,49 @@ Bu proje özellikle şu tür şirketler için tasarlandı:
 - ✅ Clean code ve best practice odaklı ekipler
 - ✅ Test-driven development uygulayan şirketler
 - ✅ Scrum/Agile metodolojisi kullanan teams
+
+---
+
+## 💎 Teknik Highlights
+
+### **Architecture & Design**
+- ✅ **Clean Architecture**: Katmanlı mimari (Data → Logic → View)
+- ✅ **MVC Pattern**: BoardController (Logic) + BoardView (View) ayrımı
+- ✅ **SOLID Principles**: Her sınıf tek sorumluluk, interface segregation
+- ✅ **5 Design Pattern**: Service Locator, Observer, Singleton, Command, Strategy
+
+### **Code Quality**
+- ✅ **XML Documentation**: Tüm public API'ler için detaylı açıklamalar
+- ✅ **Unit Tests**: 16/16 test passed (100% success rate)
+- ✅ **Naming Conventions**: C# ve Unity standartlarına uygun
+- ✅ **Assembly Definitions**: Compile time optimizasyonu ve modüler yapı
+- ✅ **Method Length**: Her metod <30 satır, anlaşılır ve maintainable
+
+### **Performance & Optimization**
+- ✅ **Layer Mask**: Raycast optimizasyonu (sadece Tile layer)
+- ✅ **2D Physics**: BoxCollider2D kullanımı (2D oyun için doğru)
+- ✅ **Pure C# Classes**: Tile ve Grid MonoBehaviour değil (performance)
+- ✅ **Event-Driven**: Observer pattern ile loose coupling
+- 🔜 **Object Pooling**: Yakında eklenecek (memory optimization)
+
+### **Extensibility**
+- ✅ **Strategy Pattern**: Yeni match türleri kolayca eklenebilir
+- ✅ **Command Pattern**: Undo/Redo sistemi için hazır
+- ✅ **Interface-Based**: IMatchStrategy, IInputHandler, IMatchDetector
+- ✅ **Open/Closed**: Yeni özellikler eklemek için modify değil extend
+
+### **Testing**
+- ✅ **Arrange-Act-Assert**: Test pattern best practice
+- ✅ **Test Isolation**: Her test bağımsız çalışır
+- ✅ **Edge Cases**: Boundary conditions test edildi
+- ✅ **Assembly Definition**: Test ve production kod ayrımı
+
+### **Unity Best Practices**
+- ✅ **DOTween**: Industry-standard animation library
+- ✅ **Responsive Camera**: Tüm cihazlarda çalışır (CameraFitter)
+- ✅ **Namespace Organization**: Yunus.Match3 namespace
+- ✅ **Prefab System**: Modular tile sistemi
+- ✅ **ScriptableObject Ready**: Config sistemi için hazır altyapı
 
 ---
 
