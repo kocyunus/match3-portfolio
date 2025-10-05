@@ -72,9 +72,16 @@ namespace Yunus.Match3
             transform.DOShakePosition(0.4f, 0.12f, 10, 90, false, true);
         }
         
-        public void DestroyWithAnimation()
+        /// <summary>
+        /// Tile'ı yok et (DOTween scale animasyonu ile)
+        /// Match sonrası çağrılır
+        /// </summary>
+        public void DestroyWithAnimation(float duration = 0.25f)
         {
-            Destroy(gameObject);
+            // Scale to 0 animation
+            transform.DOScale(Vector3.zero, duration)
+                .SetEase(Ease.InBack)
+                .OnComplete(() => Destroy(gameObject));
         }
     }
 }

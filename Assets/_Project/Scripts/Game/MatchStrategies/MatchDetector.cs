@@ -50,7 +50,7 @@ namespace Yunus.Match3
         }
         
         /// <summary>
-        /// Tüm stratejilerden match'leri topla
+        /// Tüm stratejilerden match'leri topla (tek tile için)
         /// </summary>
         public List<Tile> FindMatches(Tile tile, Grid grid)
         {
@@ -72,6 +72,38 @@ namespace Yunus.Match3
             }
             
             return allMatches;
+        }
+        
+        /// <summary>
+        /// Tüm board'u tara ve tüm match'leri bul
+        /// Cascade detection için kullanılır
+        /// </summary>
+        public List<Tile> FindAllMatches(Grid grid)
+        {
+            if (grid == null) return new List<Tile>();
+            
+            HashSet<Tile> allMatchedTiles = new HashSet<Tile>(); // Duplicate önleme için HashSet
+            
+            // Tüm grid'i tara
+            for (int x = 0; x < grid.Width; x++)
+            {
+                for (int y = 0; y < grid.Height; y++)
+                {
+                    Tile tile = grid.GetTile(x, y);
+                    if (tile == null) continue;
+                    
+                    // Bu tile match yapıyor mu?
+                    List<Tile> matches = FindMatches(tile, grid);
+                    
+                    // Match'leri set'e ekle (otomatik duplicate önler)
+                    foreach (var match in matches)
+                    {
+                        allMatchedTiles.Add(match);
+                    }
+                }
+            }
+            
+            return new List<Tile>(allMatchedTiles);
         }
     }
 }

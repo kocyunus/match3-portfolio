@@ -166,6 +166,18 @@ public class Grid
         return emptyPositions;
     }
 
+    /// <summary>
+    /// Grid'den tile'ı kaldır (null yap)
+    /// Match sonrası tile'ları yok etmek için kullanılır
+    /// </summary>
+    public void RemoveTile(int x, int y)
+    {
+        if (IsValidPosition(x, y))
+        {
+            tiles[x, y] = null;
+        }
+    }
+
     #endregion
 
     #region Temizleme

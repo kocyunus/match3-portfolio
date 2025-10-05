@@ -191,7 +191,20 @@ namespace Yunus.Match3
             if (hasMatch)
             {
                 Debug.Log("Match found! ✅");
-                // TODO: Tile destruction
+                
+                // Match'leri bul ve yok et
+                List<Tile> matches1 = matchDetector.FindMatches(tile1.Tile, grid);
+                List<Tile> matches2 = matchDetector.FindMatches(tile2.Tile, grid);
+                
+                // İki listeyi birleştir (duplicate önle)
+                HashSet<Tile> allMatches = new HashSet<Tile>(matches1);
+                foreach (var tile in matches2)
+                {
+                    allMatches.Add(tile);
+                }
+                
+                // Destroy et
+                yield return StartCoroutine(DestroyMatchedTiles(new List<Tile>(allMatches)));
                 
                 isProcessingSwap = false;
             }
@@ -203,6 +216,36 @@ namespace Yunus.Match3
                 yield return new WaitForSeconds(0.7f);
                 isProcessingSwap = false;
             }
+        }
+        
+        /// <summary>
+        /// Match olan tile'ları yok et (animasyon ile)
+        /// </summary>
+        private System.Collections.IEnumerator DestroyMatchedTiles(List<Tile> matchedTiles)
+        {
+            Debug.Log($"Destroying {matchedTiles.Count} tiles...");
+            
+            foreach (var tile in matchedTiles)
+            {
+                if (tileViews.ContainsKey(tile))
+                {
+                    TileView view = tileViews[tile];
+                    
+                    // Animasyon başlat (DOTween)
+                    view.DestroyWithAnimation(0.25f);
+                    
+                    // Dictionary'den çıkar
+                    tileViews.Remove(tile);
+                    
+                    // Grid'den çıkar
+                    grid.RemoveTile(tile.X, tile.Y);
+                }
+            }
+            
+            // Tüm animasyonlar bitsin
+            yield return new WaitForSeconds(0.3f);
+            
+            Debug.Log("Tiles destroyed! ✅");
         }
     }
 }
