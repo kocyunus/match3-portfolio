@@ -1,5 +1,6 @@
 using UnityEngine;
 using DG.Tweening;
+using Yunus.Match3;
 
 /// <summary>
 /// Oyun başlangıç noktası - Servisleri başlatır
@@ -61,9 +62,13 @@ public class Bootstrapper : MonoBehaviour
     private void RegisterServices()
     {
         Debug.Log("[Bootstrapper] Servisler kaydediliyor...");
-        
-        // DOTween kullanıyoruz, AnimationService yok artık
-        
+
+        if (!ServiceLocator.IsRegistered<GameStateService>())
+        {
+            ServiceLocator.Register<GameStateService>(new GameStateService());
+            Debug.Log("[Bootstrapper] GameStateService kaydedildi.");
+        }
+
         Debug.Log("[Bootstrapper] Servisler kaydedildi.");
     }
 
