@@ -19,15 +19,19 @@ namespace Yunus.Match3
         private Dictionary<Tile, TileView> tileViews;
         private TileView selectedTile = null;
         private bool isProcessingSwap = false;
+        private GameStateService gameStateService;
         
         private void Awake()
         {
             // Dependency Injection
             matchDetector = new MatchDetector();
+
+            InitializeGameStateService();
         }
         
         private void Start()
         {
+            InitializeGameStateService();
             InitializeBoard();
         }
         
@@ -47,6 +51,14 @@ namespace Yunus.Match3
             {
                 inputHandler.OnSwipe -= HandleSwipe;
                 inputHandler.OnTileClick -= HandleTileClick;
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (gameStateService != null)
+            {
+                gameStateService.OnStateChanged -= HandleGameStateChanged;
             }
         }
         
@@ -88,6 +100,8 @@ namespace Yunus.Match3
             }
             
             Debug.Log("[BoardController] Board başlatıldı ✅");
+
+            TrySetGameState(GameStateType.Ready);
         }
         
         /// <summary>
@@ -97,6 +111,11 @@ namespace Yunus.Match3
         {
             // GUARD: Zaten bir swap devam ediyor mu?
             if (isProcessingSwap)
+            {
+                return;
+            }
+
+            if (gameStateService != null && !gameStateService.IsPlayerInputAllowed)
             {
                 return;
             }
@@ -123,6 +142,11 @@ namespace Yunus.Match3
         private void HandleTileClick(TileView clickedTile)
         {
             if (isProcessingSwap) return;
+
+            if (gameStateService != null && !gameStateService.IsPlayerInputAllowed)
+            {
+                return;
+            }
             
             if (selectedTile == null)
             {
@@ -171,6 +195,8 @@ namespace Yunus.Match3
         /// </summary>
         private void SwapTiles(TileView view1, TileView view2)
         {
+            TrySetGameState(GameStateType.Processing);
+
             SwapCommand swapCommand = new SwapCommand(view1, view2, grid);
             swapCommand.Execute();
             
@@ -246,12 +272,13 @@ namespace Yunus.Match3
             {
                 Debug.Log("No match - reverting ❌");
                 command.Undo();
-                
+
                 // KRİTİK: Undo sonrası da dictionary güncelle!
                 UpdateTileViewsDictionary();
-                
+
                 yield return new WaitForSeconds(0.7f);
                 isProcessingSwap = false;
+                TrySetGameState(GameStateType.Ready);
             }
         }
         
@@ -503,6 +530,66 @@ namespace Yunus.Match3
             Debug.Log("🎮 MATCH-3 GAME LOOP COMPLETE! 🎮");
             Debug.Log("Player can move again.");
             Debug.Log("═══════════════════════════════════════");
+
+            TrySetGameState(GameStateType.Ready);
+        }
+
+        private void InitializeGameStateService()
+        {
+            if (gameStateService != null)
+            {
+                return;
+            }
+
+            if (ServiceLocator.IsRegistered<GameStateService>())
+            {
+                gameStateService = ServiceLocator.Get<GameStateService>();
+                gameStateService.OnStateChanged += HandleGameStateChanged;
+
+                HandleGameStateChanged(new GameStateChangedEventArgs(
+                    gameStateService.PreviousState,
+                    gameStateService.CurrentState,
+                    GameStateTransitionSource.System,
+                    gameStateService.IsPlayerInputAllowed));
+            }
+            else
+            {
+                Debug.LogWarning("[BoardController] GameStateService bulunamadı. Input kilitleme devre dışı kalacak.");
+            }
+        }
+
+        private void HandleGameStateChanged(GameStateChangedEventArgs args)
+        {
+            if (!args.AllowsPlayerInput)
+            {
+                DeselectTile();
+            }
+
+            if (inputHandler != null)
+            {
+                inputHandler.enabled = args.AllowsPlayerInput;
+            }
+        }
+
+        private bool TrySetGameState(GameStateType state)
+        {
+            if (gameStateService == null)
+            {
+                return false;
+            }
+
+            if (state == GameStateType.Ready && gameStateService.CurrentState == GameStateType.Booting)
+            {
+                gameStateService.TrySetState(GameStateType.Loading, GameStateTransitionSource.GameplayLoop);
+            }
+
+            if (!gameStateService.TrySetState(state, GameStateTransitionSource.GameplayLoop))
+            {
+                Debug.LogWarning($"[BoardController] Game state güncellenemedi: {state}");
+                return false;
+            }
+
+            return true;
         }
     }
 }
